@@ -21,7 +21,7 @@ if uploaded_file and api_key:
             genai.configure(api_key=api_key)
             
             # 直接使用最通用的模型
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-1.5-pro")
             
             # 发送请求
             with st.spinner('Asking AI...'):
@@ -32,3 +32,4 @@ if uploaded_file and api_key:
         except Exception as e:
             st.error(f"出错啦 (Error): {e}")
             st.info("💡 如果显示 '404' 或 'User location'，请检查 VPN 是否开启了全局模式，且节点不是香港。")
+
