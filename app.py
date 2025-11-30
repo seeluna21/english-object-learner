@@ -1,60 +1,57 @@
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
+import os
+
+# --- CRITICAL FIX FOR VPN USERS ---
+# Replace '7890' with YOUR specific VPN port if it's different.
+# If you don't know, try 7890 first, then 10809.
+PROXY_PORT = "7890" 
+os.environ["HTTP_PROXY"] = f"http://127.0.0.1:{PROXY_PORT}"
+os.environ["HTTPS_PROXY"] = f"http://127.0.0.1:{PROXY_PORT}"
 
 st.set_page_config(page_title="Auto-Detect Object Learner", page_icon="🤖")
 
-# --- FUNCTION: Automatically find the best model ---
+# --- FUNCTION: Debugging version ---
 def find_vision_model():
-    """
-    Asks Google for a list of models and picks the best one for images.
-    Priority: 1.5 Flash -> 1.5 Pro -> Pro Vision
-    """
     try:
         models = list(genai.list_models())
-        model_names = [m.name for m in models]
+        # Print what we found to the terminal for debugging
+        print(f"DEBUG: Found {len(models)} models.") 
         
-        # 1. Try to find the specific "Flash" model (Best for speed)
-        for name in model_names:
-            if "gemini-1.5-flash" in name:
-                return name
+        for m in models:
+            print(f" - {m.name}") # Print names to terminal
+            if "gemini-1.5-flash" in m.name: return m.name
+            if "gemini-1.5-pro" in m.name: return m.name
+            if "gemini-pro-vision" in m.name: return m.name
         
-        # 2. If no Flash, look for "Pro 1.5" (Best for quality)
-        for name in model_names:
-            if "gemini-1.5-pro" in name:
-                return name
-
-        # 3. If neither, look for the older "Vision" model
-        for name in model_names:
-            if "gemini-pro-vision" in name:
-                return name
-                
         return None
     except Exception as e:
-        # If the API key is wrong, this fails
-        return None
+        # RETURN THE ACTUAL ERROR MESSAGE
+        return f"ERROR: {str(e)}"
 
 # --- MAIN APP UI ---
 st.title("🤖 Smart English Object Learner")
-st.write("Upload a photo, and I will auto-detect the best AI model to describe it.")
 
-# 1. Sidebar for API Key
+# 1. Sidebar
 api_key = st.sidebar.text_input("Enter Google API Key", type="password")
-
-# 2. Configure API immediately if key is present
-valid_model_name = None
 
 if api_key:
     genai.configure(api_key=api_key)
     
-    # Run our auto-detector
-    with st.spinner("Connecting to Google to find available models..."):
-        valid_model_name = find_vision_model()
+    with st.spinner("Connecting..."):
+        result = find_vision_model()
     
-    if valid_model_name:
-        st.sidebar.success(f"✅ Connected! Using model: `{valid_model_name}`")
+    # CHECK IF RESULT IS AN ERROR
+    if result and result.startswith("ERROR"):
+        st.sidebar.error("❌ Connection Failed!")
+        st.error(f"⚠️ **Detailed Error:** {result}")
+        st.warning("If the error says 'ConnectTimeout', your VPN Port in the code is wrong.")
+    elif result:
+        st.sidebar.success(f"✅ Connected! Using: `{result}`")
+        valid_model_name = result
     else:
-        st.sidebar.error("❌ Could not find a vision model. Check your API Key or VPN.")
+        st.sidebar.error("❌ No models found (List was empty).")
 
 # 3. File Uploader
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
@@ -87,3 +84,4 @@ if uploaded_file is not None:
                     
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
+
