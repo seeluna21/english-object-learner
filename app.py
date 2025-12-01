@@ -225,10 +225,11 @@ if uploaded_file:
                         st.caption("Listen to the scenario:")
                         scenario_audio = text_to_speech(scenario_text)
                         if scenario_audio:
-                            st.audio(scenario_audio, format='audio/mp3')
-
+                            st.audio(scenario_audio, format='audio/mpeg')
+                            
                     except json.JSONDecodeError:
                         st.error("Error parsing AI response. Please try again.")
                     except Exception as e:
                         st.error(f"An error occurred: {e}")
+
 
