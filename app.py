@@ -110,11 +110,16 @@ def get_model_name():
     except:
         return None
 
+# Find this function in your app.py
 def text_to_speech(text):
     try:
         tts = gTTS(text=text, lang='en')
         mp3_fp = io.BytesIO()
         tts.write_to_fp(mp3_fp)
+        
+        # --- ADD THIS LINE (CRITICAL FOR IPHONE) ---
+        mp3_fp.seek(0)  # Rewind to the start of the file
+        
         return mp3_fp
     except:
         return None
@@ -200,7 +205,7 @@ if uploaded_file:
                                 # Audio Button (Compact)
                                 audio_bytes = text_to_speech(item['word'])
                                 if audio_bytes:
-                                    st.audio(audio_bytes, format='audio/mp3')
+                                    st.audio(audio_bytes, format='audio/mpeg')
 
                         # --- 2. Scenario Mode Section ---
                         st.markdown("---")
@@ -226,3 +231,4 @@ if uploaded_file:
                         st.error("Error parsing AI response. Please try again.")
                     except Exception as e:
                         st.error(f"An error occurred: {e}")
+
